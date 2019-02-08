@@ -7,15 +7,59 @@ trigger:
 - master
 
 jobs:
-- job:
+- job: Java8
   pool:
     vmImage: 'Ubuntu-16.04'
-  strategy:
-    matrix:
-      Java8:
-        JDK_VERSION: 1.8
-      Java11:
-        JDK_VERSION: 1.11
+  variables:
+    JDK_VERSION: 1.8
+  steps:
+  - task: Gradle@2
+    inputs:
+      gradleWrapperFile: 'gradlew' 
+      options: -x check --scan --no-daemon
+      tasks: 'build' 
+      jdkVersionOption: $(JDK_VERSION)
+    displayName: Build
+
+  - task: Gradle@2
+    inputs:
+      gradleWrapperFile: 'gradlew' 
+      options:  --scan --no-daemon
+      tasks: 'testcontainers:check javadoc' 
+      publishJUnitResults: true 
+      testResultsFiles: '**/TEST-*.xml' # Required when publishJUnitResults == True
+      testRunTitle: Core Tests Java $(JDK_VERSION)
+      jdkVersionOption: $(JDK_VERSION)
+    displayName: Core Tests
+
+  - task: Gradle@2
+    inputs:
+      gradleWrapperFile: 'gradlew' 
+      options: --scan --no-daemon
+      tasks: 'selenium:check' 
+      publishJUnitResults: true 
+      testResultsFiles: '**/TEST-*.xml' # Required when publishJUnitResults == True
+      testRunTitle: Selenium Tests Java $(JDK_VERSION)
+      jdkVersionOption: $(JDK_VERSION)
+    condition: and(succeeded(), ne("1.11", variables["JDK_VERSION"]))
+    displayName: Selenium Tests
+
+  - task: Gradle@2
+    inputs:
+      gradleWrapperFile: 'gradlew' 
+      options: -x testcontainers:check -x selenium:check --scan --no-daemon
+      tasks: 'check' 
+      publishJUnitResults: true 
+      testResultsFiles: '**/TEST-*.xml' # Required when publishJUnitResults == True
+      testRunTitle: Module Tests Java $(JDK_VERSION)
+      jdkVersionOption: $(JDK_VERSION)
+    displayName: Module Tests
+  
+- job: Java11
+  pool:
+    vmImage: 'Ubuntu-16.04'
+  variables:
+    JDK_VERSION: 1.11
   steps:
   - task: Gradle@2
     inputs:
