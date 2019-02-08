@@ -1,0 +1,19 @@
+# Gradle
+# Build your Java project and run tests with Gradle using a Gradle wrapper script.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- master
+
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+steps:
+- script: ./gradlew build -x check --scan --no-daemon
+  displayName: "Build"
+
+- script: ./gradlew testcontainers:check javadoc --scan --no-daemon
+  displayName: Core
+  env:
+    NAME: Core
