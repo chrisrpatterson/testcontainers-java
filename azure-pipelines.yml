@@ -6,14 +6,32 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'Ubuntu-16.04'
+jobs:
+- job:
+  pool:
+    vmImage: 'Ubuntu-16.04'
+  strategy:
+    matrix:
+      Java8:
+        JDK_VERSION: 1.8
+      Java11:
+        JDK_VERSION: 1.11
+  steps:
+  - task: Gradle@2
+    inputs:
+      gradleWrapperFile: 'gradlew' 
+      options: -x check --scan --no-daemon
+      tasks: 'build' 
+      jdkVersionOption: $(JDK_VERSION)
+    displayName: Build
 
-steps:
-- script: ./gradlew build -x check --scan --no-daemon
-  displayName: "Build"
-
-- script: ./gradlew testcontainers:check javadoc --scan --no-daemon
-  displayName: Core
-  env:
-    NAME: Core
+  - task: Gradle@2
+    inputs:
+      gradleWrapperFile: 'gradlew' 
+      options:  --scan --no-daemon
+      tasks: 'testcontainers:check javadoc' 
+      publishJUnitResults: true 
+      testResultsFiles: '**/TEST-*.xml' # Required when publishJUnitResults == True
+      testRunTitle: Core Tests Java $(JDK_VERSION)
+      jdkVersionOption: $(JDK_VERSION)
+    displayName: Core Tests
