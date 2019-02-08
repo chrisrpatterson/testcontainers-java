@@ -41,7 +41,6 @@ jobs:
       testResultsFiles: '**/TEST-*.xml' # Required when publishJUnitResults == True
       testRunTitle: Selenium Tests Java $(JDK_VERSION)
       jdkVersionOption: $(JDK_VERSION)
-    condition: and(succeeded(), ne("1.11", variables["JDK_VERSION"]))
     displayName: Selenium Tests
 
   - task: Gradle@2
